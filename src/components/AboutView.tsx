@@ -261,7 +261,7 @@ export default function AboutView() {
                       className="w-full h-full block cursor-zoom-in relative"
                       aria-label={`View ${cert.title} certificate`}
                     >
-                      <img src={cover.media_url} alt={cert.title} className="w-full h-full object-cover" />
+                      <img src={cover.media_url} alt={cert.title} className="w-full h-full object-cover" loading="lazy" />
                       {count > 1 && (
                         <span className="absolute bottom-2 right-2 px-2 py-1 rounded-full bg-navy-950/70 text-white text-xs font-medium">
                           +{count - 1} more
@@ -330,7 +330,7 @@ export default function AboutView() {
                     className="shrink-0 w-10 h-10 rounded-lg overflow-hidden cursor-zoom-in"
                     aria-label={`View photos for ${item.role}`}
                   >
-                    <img src={cover.media_url} alt={item.role} className="w-full h-full object-cover" />
+                    <img src={cover.media_url} alt={item.role} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ) : (
                   <div className="shrink-0 w-10 h-10 rounded-lg bg-navy-50 flex items-center justify-center">

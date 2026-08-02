@@ -120,7 +120,7 @@ export default function EntityMediaManager({ entityType, entityId }: EntityMedia
             {item.media_type === 'video' ? (
               <video src={item.media_url} muted className="w-full h-full object-cover" />
             ) : (
-              <img src={item.media_url} alt={item.caption || ''} className="w-full h-full object-cover" />
+              <img src={item.media_url} alt={item.caption || ''} className="w-full h-full object-cover" loading="lazy" />
             )}
             {item.is_cover && (
               <span className="absolute top-1 left-1 p-0.5 rounded-full bg-navy-700 text-white">

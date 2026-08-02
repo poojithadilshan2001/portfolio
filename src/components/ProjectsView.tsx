@@ -156,7 +156,7 @@ export default function ProjectsView({ focusTitle }: ProjectsViewProps) {
                   }`}
                 >
                   {headerImage ? (
-                    <img src={headerImage.media_url} alt="" className="w-full h-full object-cover" />
+                    <img src={headerImage.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <Icon className={isOpen ? 'text-white' : 'text-navy-600'} size={24} />
                   )}

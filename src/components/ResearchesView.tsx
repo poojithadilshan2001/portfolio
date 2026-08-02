@@ -156,11 +156,18 @@ export default function ResearchesView() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('researches')
         .select('*')
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
+      if (error) {
+        // Fallback: sort_order column may not exist yet
+        ({ data, error } = await supabase
+          .from('researches')
+          .select('*')
+          .order('created_at', { ascending: false }));
+      }
       if (error) {
         setError('Unable to load research. Please try again later.');
         setLoading(false);

@@ -14,6 +14,7 @@ import {
   ArrowUp,
   ArrowDown,
   Star,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import EntityMediaManager from '@/components/admin/EntityMediaManager';
@@ -336,7 +337,7 @@ function ProfilePhotoManager() {
             currentMediaType === 'video' ? (
               <video src={currentUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
             ) : (
-              <img src={currentUrl} alt="Profile" className="w-full h-full object-cover" />
+              <img src={currentUrl} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
             )
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-300">
@@ -351,6 +352,51 @@ function ProfilePhotoManager() {
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CVManager() {
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    supabase.from('site_settings').select('value').eq('key', 'cv_url').single()
+      .then(({ data }) => { if (data?.value) setCurrentUrl(data.value); });
+  }, []);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.includes('pdf')) { setError('Please select a PDF file.'); return; }
+    setUploading(true); setError(''); setSuccess('');
+    const path = `cv/cv-${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage.from('portfolio-media').upload(path, file);
+    if (uploadError) { setError(uploadError.message); setUploading(false); return; }
+    const { data: pub } = supabase.storage.from('portfolio-media').getPublicUrl(path);
+    const { error: upsertError } = await supabase.from('site_settings')
+      .upsert([{ key: 'cv_url', value: pub.publicUrl }], { onConflict: 'key' });
+    if (upsertError) { setError(upsertError.message); } else { setCurrentUrl(pub.publicUrl); setSuccess('CV uploaded successfully!'); }
+    setUploading(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-6">
+      <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
+        <FileText size={18} className="text-navy-600" />
+        CV / Resume (PDF)
+      </h2>
+      {currentUrl && (
+        <div className="mb-4 rounded-xl border border-slate-200 overflow-hidden" style={{ height: 400 }}>
+          <iframe src={currentUrl} className="w-full h-full" title="CV preview" />
+        </div>
+      )}
+      <p className="text-xs text-slate-500 mb-2">Upload a PDF — it will show in the Contact page with a download button.</p>
+      <input type="file" accept="application/pdf" onChange={handleFile} disabled={uploading} className="text-sm text-slate-600" />
+      {uploading && <p className="text-sm text-slate-500 mt-2">Uploading...</p>}
+      {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+      {success && <p className="text-sm text-green-600 mt-2">{success}</p>}
     </div>
   );
 }
@@ -889,7 +935,7 @@ function ProjectsManager() {
                     <div key={sp.id} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-3">
                       <div className="w-14 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                         {subCovers[sp.id]?.url && (
-                          <img src={subCovers[sp.id].url} alt={sp.title} className="w-full h-full object-cover" />
+                          <img src={subCovers[sp.id].url} alt={sp.title} className="w-full h-full object-cover" loading="lazy" />
                         )}
                       </div>
                       <p className="flex-1 text-sm text-slate-700 truncate">{sp.title}</p>
@@ -1316,7 +1362,7 @@ export default function AdminView() {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<
-    'gallery' | 'profile' | 'research' | 'projects' | 'ventures' | 'certifications' | 'leadership'
+    'gallery' | 'profile' | 'cv' | 'research' | 'projects' | 'ventures' | 'certifications' | 'leadership'
   >('gallery');
 
   useEffect(() => {
@@ -1357,7 +1403,7 @@ export default function AdminView() {
       </div>
 
       <div className="flex gap-2 mb-8 flex-wrap">
-        {(['gallery', 'profile', 'research', 'projects', 'certifications', 'leadership', 'ventures'] as const).map(
+        {(['gallery', 'profile', 'cv', 'research', 'projects', 'certifications', 'leadership', 'ventures'] as const).map(
           (t) => (
             <button
               key={t}
@@ -1368,6 +1414,7 @@ export default function AdminView() {
             >
               {t === 'gallery' && 'Gallery'}
               {t === 'profile' && 'Profile Photo'}
+              {t === 'cv' && 'CV / Resume'}
               {t === 'research' && 'Research'}
               {t === 'projects' && 'Projects'}
               {t === 'certifications' && 'Certifications'}
@@ -1380,6 +1427,7 @@ export default function AdminView() {
 
       {tab === 'gallery' && <GalleryManager />}
       {tab === 'profile' && <ProfilePhotoManager />}
+      {tab === 'cv' && <CVManager />}
       {tab === 'research' && <ResearchMediaManager />}
       {tab === 'projects' && <ProjectsManager />}
       {tab === 'certifications' && <CertificationsManager />}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, FileText, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { contactInfo } from '@/data';
@@ -9,6 +9,16 @@ export default function ContactView() {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'cv_url')
+      .single()
+      .then(({ data }) => { if (data?.value) setCvUrl(data.value); });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,18 +167,33 @@ export default function ContactView() {
       {/* Resume Section */}
       <section>
         <h2 className="text-2xl font-semibold text-slate-800 mb-6">Resume</h2>
-        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 aspect-[16/10] flex flex-col items-center justify-center mb-6 hover:border-navy-300 transition-colors">
-          <FileText className="text-slate-400 mb-4" size={56} />
-          <p className="text-slate-500 font-medium text-center px-4">
-            Embedded PDF Viewer
-            <br />
-            <span className="text-sm text-slate-400">Poojitha_Dilshan_CV_Final.pdf</span>
-          </p>
-        </div>
-        <button className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-navy-700 text-white font-semibold hover:bg-navy-800 transition-all hover:scale-105 shadow-lg">
-          <Download size={20} />
-          Download Full CV as PDF
-        </button>
+        {cvUrl ? (
+          <>
+            <div className="rounded-2xl border border-slate-200 overflow-hidden mb-6 bg-slate-50" style={{ height: '70vh' }}>
+              <iframe
+                src={cvUrl + '#toolbar=0&navpanes=0'}
+                className="w-full h-full"
+                title="CV"
+              />
+            </div>
+            <a
+              href={cvUrl}
+              download="Poojitha_Dilshan_CV.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-navy-700 text-white font-semibold hover:bg-navy-800 transition-all hover:scale-105 shadow-lg"
+            >
+              <Download size={20} />
+              Download Full CV as PDF
+            </a>
+          </>
+        ) : (
+          <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 aspect-[16/10] flex flex-col items-center justify-center">
+            <FileText className="text-slate-400 mb-4" size={56} />
+            <p className="text-slate-500 font-medium text-center px-4">CV not uploaded yet</p>
+            <p className="text-sm text-slate-400 mt-1">Upload from the admin panel</p>
+          </div>
+        )}
       </section>
     </div>
   );
