@@ -177,6 +177,10 @@ function GalleryManager() {
   const [categories, setCategories] = useState<GalleryCategory[]>([]);
   const [covers, setCovers] = useState<Record<string, { url: string; type: string }>>({});
   const [loading, setLoading] = useState(true);
+  const [newCatName, setNewCatName] = useState('');
+  const [addingCat, setAddingCat] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -222,11 +226,6 @@ function GalleryManager() {
   };
 
   if (loading) return <Loader2 className="animate-spin text-navy-600 mx-auto" size={28} />;
-
-  const [newCatName, setNewCatName] = useState('');
-  const [addingCat, setAddingCat] = useState(false);
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renameVal, setRenameVal] = useState('');
 
   const handleAddCategory = async () => {
     if (!newCatName.trim()) return;
