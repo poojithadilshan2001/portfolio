@@ -321,27 +321,22 @@ export default function AboutView() {
               return (
               <div
                 key={item.id}
-                className="flex gap-4 bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-navy-200 transition-all animate-fade-up"
+                onClick={() => count > 0 && openLightbox(item.id, item.role)}
+                className={`flex gap-4 bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-navy-200 transition-all animate-fade-up ${count > 0 ? 'cursor-pointer' : ''}`}
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                {cover ? (
-                  <button
-                    onClick={() => openLightbox(item.id, item.role)}
-                    className="shrink-0 w-10 h-10 rounded-lg overflow-hidden cursor-zoom-in"
-                    aria-label={`View photos for ${item.role}`}
-                  >
+                <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-navy-50 flex items-center justify-center">
+                  {cover ? (
                     <img src={cover.media_url} alt={item.role} className="w-full h-full object-cover" loading="lazy" />
-                  </button>
-                ) : (
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-navy-50 flex items-center justify-center">
+                  ) : (
                     <Users className="text-navy-600" size={20} />
-                  </div>
-                )}
+                  )}
+                </div>
                 <div>
                   <h3 className="font-semibold text-slate-800">{item.role}</h3>
                   <p className="text-slate-500 text-sm">{item.org}</p>
                   <span className="text-navy-600 text-sm font-medium">{item.period}</span>
-                  {count > 1 && <span className="ml-2 text-xs text-slate-400">+{count - 1} more photos</span>}
+                  {count > 1 && <span className="ml-2 text-xs text-navy-600 font-medium">+{count - 1} more photos</span>}
                 </div>
               </div>
               );
