@@ -223,44 +223,86 @@ function GalleryManager() {
 
   if (loading) return <Loader2 className="animate-spin text-navy-600 mx-auto" size={28} />;
 
+  const [newCatName, setNewCatName] = useState('');
+  const [addingCat, setAddingCat] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState('');
+
+  const handleAddCategory = async () => {
+    if (!newCatName.trim()) return;
+    setAddingCat(true);
+    const maxOrder = categories.reduce((m, c) => Math.max(m, c.sort_order), -1);
+    await supabase.from('gallery_categories').insert({ name: newCatName.trim(), sort_order: maxOrder + 1 });
+    setNewCatName('');
+    setAddingCat(false);
+    await load();
+  };
+
+  const handleRename = async (id: string) => {
+    if (!renameVal.trim()) { setRenamingId(null); return; }
+    await supabase.from('gallery_categories').update({ name: renameVal.trim() }).eq('id', id);
+    setRenamingId(null);
+    await load();
+  };
+
   return (
     <div>
       <h2 className="font-semibold text-slate-800 mb-2">Gallery categories</h2>
-      <p className="text-sm text-slate-500 mb-6">
+      <p className="text-sm text-slate-500 mb-4">
         Upload photos &amp; videos per category. Click the ★ star on any item to make it the cover shown on the site.
       </p>
+
+      {/* Add new category */}
+      <div className="flex gap-2 mb-6">
+        <input
+          type="text"
+          value={newCatName}
+          onChange={(e) => setNewCatName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+          placeholder="New category name…"
+          className="flex-1 px-3 py-2 text-sm rounded-xl border border-slate-200 text-slate-800"
+        />
+        <button
+          onClick={handleAddCategory}
+          disabled={addingCat || !newCatName.trim()}
+          className="px-4 py-2 rounded-xl bg-navy-700 text-white text-sm font-medium hover:bg-navy-800 disabled:opacity-50"
+        >
+          + Add
+        </button>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-4">
         {categories.map((cat, index) => (
           <div key={cat.id} className="bg-white rounded-2xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3">
               {covers[cat.id]?.url ? (
-                <img
-                  src={covers[cat.id].url}
-                  alt={cat.name}
-                  className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100"
-                />
+                <img src={covers[cat.id].url} alt={cat.name} className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100" />
               ) : (
                 <div className="w-10 h-10 rounded-lg bg-navy-50 flex items-center justify-center shrink-0">
                   <ImagePlus size={18} className="text-navy-400" />
                 </div>
               )}
-              <p className="flex-1 font-medium text-slate-800 text-sm">{cat.name}</p>
-              <button
-                onClick={() => handleMoveCategory(index, -1)}
-                disabled={index === 0}
-                className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
-                aria-label="Move up"
-              >
-                <ArrowUp size={14} />
-              </button>
-              <button
-                onClick={() => handleMoveCategory(index, 1)}
-                disabled={index === categories.length - 1}
-                className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
-                aria-label="Move down"
-              >
-                <ArrowDown size={14} />
-              </button>
+              {renamingId === cat.id ? (
+                <input
+                  autoFocus
+                  type="text"
+                  value={renameVal}
+                  onChange={(e) => setRenameVal(e.target.value)}
+                  onBlur={() => handleRename(cat.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRename(cat.id)}
+                  className="flex-1 px-2 py-1 text-sm rounded border border-navy-300 text-slate-800"
+                />
+              ) : (
+                <button
+                  onClick={() => { setRenamingId(cat.id); setRenameVal(cat.name); }}
+                  className="flex-1 font-medium text-slate-800 text-sm text-left hover:text-navy-700"
+                  title="Click to rename"
+                >
+                  {cat.name} <Pencil size={11} className="inline ml-1 text-slate-400" />
+                </button>
+              )}
+              <button onClick={() => handleMoveCategory(index, -1)} disabled={index === 0} className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"><ArrowUp size={14} /></button>
+              <button onClick={() => handleMoveCategory(index, 1)} disabled={index === categories.length - 1} className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"><ArrowDown size={14} /></button>
             </div>
             <EntityMediaManager entityType="gallery" entityId={cat.id} />
           </div>

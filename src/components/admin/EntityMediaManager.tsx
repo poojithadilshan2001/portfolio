@@ -30,6 +30,32 @@ interface EntityMediaManagerProps {
   entityId: string;
 }
 
+function CaptionInput({ item, onSaved }: { item: EntityMediaRow; onSaved: () => void }) {
+  const [val, setVal] = useState(item.caption || '');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (val === (item.caption || '')) return;
+    setSaving(true);
+    await supabase.from('entity_media').update({ caption: val.trim() || null }).eq('id', item.id);
+    setSaving(false);
+    onSaved();
+  };
+
+  return (
+    <input
+      type="text"
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onBlur={save}
+      onKeyDown={(e) => e.key === 'Enter' && save()}
+      placeholder="Caption (click to edit)"
+      className="flex-1 px-2 py-1 text-xs rounded border border-slate-200 bg-white text-slate-700 min-w-0"
+      disabled={saving}
+    />
+  );
+}
+
 export default function EntityMediaManager({ entityType, entityId }: EntityMediaManagerProps) {
   const [items, setItems] = useState<EntityMediaRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,62 +140,34 @@ export default function EntityMediaManager({ entityType, entityId }: EntityMedia
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3 mb-3">
+      <div className="flex flex-col gap-2 mb-3">
         {items.map((item, index) => (
-          <div key={item.id} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
-            {item.media_type === 'video' ? (
-              <video src={item.media_url} muted className="w-full h-full object-cover" />
-            ) : (
-              <img src={item.media_url} alt={item.caption || ''} className="w-full h-full object-cover" loading="lazy" />
-            )}
-            {item.is_cover && (
-              <span className="absolute top-1 left-1 p-0.5 rounded-full bg-navy-700 text-white">
-                <Star size={10} fill="currentColor" />
-              </span>
-            )}
-            {item.media_type === 'video' && (
-              <span className="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white">
-                <Video size={10} />
-              </span>
-            )}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-              <div className="flex items-center gap-1">
-                {!item.is_cover && (
-                  <button
-                    onClick={() => handleSetCover(item)}
-                    className="p-1 rounded-full bg-white/20 text-white hover:bg-white/40"
-                    aria-label="Set as cover"
-                    title="Set as cover"
-                  >
-                    <Star size={12} />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="p-1 rounded-full bg-red-600/80 text-white hover:bg-red-600"
-                  aria-label="Delete"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleMove(index, -1)}
-                  disabled={index === 0}
-                  className="p-1 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30"
-                  aria-label="Move earlier"
-                >
-                  <ArrowUp size={12} />
-                </button>
-                <button
-                  onClick={() => handleMove(index, 1)}
-                  disabled={index === items.length - 1}
-                  className="p-1 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30"
-                  aria-label="Move later"
-                >
-                  <ArrowDown size={12} />
-                </button>
-              </div>
+          <div key={item.id} className="flex items-center gap-2 bg-slate-50 rounded-lg border border-slate-200 p-2">
+            <div className="relative shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-slate-200">
+              {item.media_type === 'video' ? (
+                <video src={item.media_url} muted className="w-full h-full object-cover" />
+              ) : (
+                <img src={item.media_url} alt={item.caption || ''} className="w-full h-full object-cover" loading="lazy" />
+              )}
+              {item.is_cover && (
+                <span className="absolute top-0.5 left-0.5 p-0.5 rounded-full bg-navy-700 text-white">
+                  <Star size={8} fill="currentColor" />
+                </span>
+              )}
+              {item.media_type === 'video' && (
+                <span className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-black/60 text-white">
+                  <Video size={8} />
+                </span>
+              )}
+            </div>
+            <CaptionInput item={item} onSaved={load} />
+            <div className="flex flex-col gap-1 shrink-0">
+              {!item.is_cover && (
+                <button onClick={() => handleSetCover(item)} className="p-1 rounded bg-navy-50 text-navy-600 hover:bg-navy-100" title="Set as cover"><Star size={12} /></button>
+              )}
+              <button onClick={() => handleMove(index, -1)} disabled={index === 0} className="p-1 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowUp size={12} /></button>
+              <button onClick={() => handleMove(index, 1)} disabled={index === items.length - 1} className="p-1 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowDown size={12} /></button>
+              <button onClick={() => handleDelete(item)} className="p-1 rounded bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={12} /></button>
             </div>
           </div>
         ))}
