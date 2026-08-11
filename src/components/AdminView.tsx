@@ -442,11 +442,29 @@ function CVManager() {
   );
 }
 
+interface ResearchFull {
+  id: string;
+  title: string;
+  period: string | null;
+  description: string | null;
+  hardware_architecture: string | null;
+  software_integration: string | null;
+  sort_order: number;
+}
+
 function ResearchMediaManager() {
-  const [allResearch, setAllResearch] = useState<ResearchEntry[]>([]);
+  const [allResearch, setAllResearch] = useState<ResearchFull[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [editTitle, setEditTitle] = useState('');
+  const [editPeriod, setEditPeriod] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editHardware, setEditHardware] = useState('');
+  const [editSoftware, setEditSoftware] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const [newTitle, setNewTitle] = useState('');
   const [newPeriod, setNewPeriod] = useState('');
@@ -457,8 +475,8 @@ function ResearchMediaManager() {
 
   const loadResearchList = async (keepSelected?: string) => {
     setLoading(true);
-    const { data } = await supabase.from('researches').select('id, title, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
-    const rows = (data || []) as ResearchEntry[];
+    const { data } = await supabase.from('researches').select('id, title, period, description, hardware_architecture, software_integration, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+    const rows = (data || []) as ResearchFull[];
     setAllResearch(rows);
     const nextSelected = keepSelected && rows.find((r) => r.id === keepSelected) ? keepSelected : rows[0]?.id || '';
     setSelectedId(nextSelected);
@@ -479,6 +497,41 @@ function ResearchMediaManager() {
     loadResearchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const startEdit = (r: ResearchFull) => {
+    setEditingId(r.id);
+    setEditTitle(r.title);
+    setEditPeriod(r.period || '');
+    setEditDescription(r.description || '');
+    setEditHardware(r.hardware_architecture || '');
+    setEditSoftware(r.software_integration || '');
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    setSaving(true);
+    await supabase.from('researches').update({
+      title: editTitle.trim(),
+      period: editPeriod.trim() || null,
+      description: editDescription.trim() || null,
+      hardware_architecture: editHardware.trim() || null,
+      software_integration: editSoftware.trim() || null,
+    }).eq('id', id);
+    setEditingId(null);
+    setSaving(false);
+    await loadResearchList(id);
+  };
+
+  const handleDeleteResearch = async (r: ResearchFull) => {
+    const { data: mediaRows } = await supabase
+      .from('entity_media')
+      .select('media_url')
+      .eq('entity_type', 'research')
+      .eq('entity_id', r.id);
+    await supabase.from('entity_media').delete().eq('entity_type', 'research').eq('entity_id', r.id);
+    for (const m of mediaRows || []) await removeFromMedia(m.media_url);
+    await supabase.from('researches').delete().eq('id', r.id);
+    await loadResearchList();
+  };
 
   const handleCreateResearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,38 +635,92 @@ function ResearchMediaManager() {
       ) : (
         <div className="space-y-6">
           <div>
-            <h2 className="font-semibold text-slate-800 mb-3">Research projects (reorder &amp; manage media)</h2>
+            <h2 className="font-semibold text-slate-800 mb-3">Research projects (reorder, edit &amp; manage media)</h2>
             <div className="space-y-3">
               {allResearch.map((r, idx) => (
                 <div
                   key={r.id}
-                  className={`bg-white rounded-2xl border p-4 cursor-pointer transition-colors ${selectedId === r.id ? 'border-navy-400 bg-navy-50/30' : 'border-slate-200 hover:border-navy-200'}`}
-                  onClick={() => setSelectedId(r.id)}
+                  className={`bg-white rounded-2xl border p-4 transition-colors ${editingId === r.id ? 'border-navy-400 bg-navy-50/30' : selectedId === r.id ? 'border-navy-300 bg-navy-50/20' : 'border-slate-200 hover:border-navy-200 cursor-pointer'}`}
+                  onClick={() => { if (editingId !== r.id) setSelectedId(r.id); }}
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <p className="flex-1 font-medium text-slate-800 text-sm">{r.title}</p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleMoveResearch(idx, -1); }}
-                      disabled={idx === 0}
-                      className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
-                      aria-label="Move earlier"
-                    >
-                      <ArrowUp size={14} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleMoveResearch(idx, 1); }}
-                      disabled={idx === allResearch.length - 1}
-                      className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
-                      aria-label="Move later"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
-                  </div>
-                  {selectedId === r.id && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <p className="text-xs text-slate-500 mb-2">Media for this research:</p>
-                      <EntityMediaManager entityType="research" entityId={r.id} />
+                  {editingId === r.id ? (
+                    <div onClick={(e) => e.stopPropagation()} className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Title</label>
+                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Period</label>
+                        <input type="text" value={editPeriod} onChange={(e) => setEditPeriod(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Description</label>
+                        <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Hardware Architecture</label>
+                        <textarea value={editHardware} onChange={(e) => setEditHardware(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Software Integration</label>
+                        <textarea value={editSoftware} onChange={(e) => setEditSoftware(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 resize-none" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveEdit(r.id)}
+                          disabled={saving || !editTitle.trim()}
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-navy-700 text-white text-sm font-medium hover:bg-navy-800 disabled:opacity-60"
+                        >
+                          {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                          Save
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
+                          Cancel
+                        </button>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-3">
+                        <p className="flex-1 font-medium text-slate-800 text-sm">{r.title}</p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMoveResearch(idx, -1); }}
+                          disabled={idx === 0}
+                          className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
+                          aria-label="Move earlier"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMoveResearch(idx, 1); }}
+                          disabled={idx === allResearch.length - 1}
+                          className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30"
+                          aria-label="Move later"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEdit(r); }}
+                          className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50"
+                          aria-label="Edit"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteResearch(r); }}
+                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          aria-label="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      {selectedId === r.id && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <p className="text-xs text-slate-500 mb-2">Media for this research:</p>
+                          <EntityMediaManager entityType="research" entityId={r.id} />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
@@ -1022,6 +1129,279 @@ function ProjectsManager() {
   );
 }
 
+const PROJECT_TYPES = [
+  'Client Project',
+  'Engineering Project',
+  'Software & Embedded',
+  'Research & Development',
+];
+
+interface DesmenProjectRow {
+  id: string;
+  title: string;
+  description: string | null;
+  our_role: string | null;
+  technologies: string | null;
+  project_type: string | null;
+  sort_order: number;
+}
+
+function DesmenProjectsManager() {
+  const [items, setItems] = useState<DesmenProjectRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Edit fields
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editTech, setEditTech] = useState('');
+  const [editType, setEditType] = useState(PROJECT_TYPES[0]);
+
+  // New project fields
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newRole, setNewRole] = useState('');
+  const [newTech, setNewTech] = useState('');
+  const [newType, setNewType] = useState(PROJECT_TYPES[0]);
+  const [adding, setAdding] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('desmen_projects')
+      .select('id, title, description, our_role, technologies, project_type, sort_order')
+      .order('sort_order', { ascending: true });
+    setItems((data || []) as DesmenProjectRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleMove = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    const a = items[index]; const b = items[target];
+    await supabase.from('desmen_projects').update({ sort_order: b.sort_order }).eq('id', a.id);
+    await supabase.from('desmen_projects').update({ sort_order: a.sort_order }).eq('id', b.id);
+    await load();
+  };
+
+  const startEdit = (item: DesmenProjectRow) => {
+    setEditingId(item.id);
+    setEditTitle(item.title);
+    setEditDescription(item.description || '');
+    setEditRole(item.our_role || '');
+    setEditTech(item.technologies || '');
+    setEditType(item.project_type || PROJECT_TYPES[0]);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    setSaving(true);
+    await supabase.from('desmen_projects').update({
+      title: editTitle.trim(),
+      description: editDescription.trim() || null,
+      our_role: editRole.trim() || null,
+      technologies: editTech.trim() || null,
+      project_type: editType,
+    }).eq('id', id);
+    setEditingId(null);
+    setSaving(false);
+    await load();
+  };
+
+  const handleDelete = async (item: DesmenProjectRow) => {
+    const { data: mediaRows } = await supabase.from('entity_media').select('media_url')
+      .eq('entity_type', 'desmen_project').eq('entity_id', item.id);
+    await supabase.from('entity_media').delete().eq('entity_type', 'desmen_project').eq('entity_id', item.id);
+    for (const m of mediaRows || []) await removeFromMedia(m.media_url);
+    await supabase.from('desmen_projects').delete().eq('id', item.id);
+    await load();
+  };
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setAdding(true); setError('');
+    const { error: insertError } = await supabase.from('desmen_projects').insert({
+      title: newTitle.trim(),
+      description: newDescription.trim() || null,
+      our_role: newRole.trim() || null,
+      technologies: newTech.trim() || null,
+      project_type: newType,
+      sort_order: items.length,
+    });
+    if (insertError) { setError(insertError.message); }
+    else {
+      setNewTitle(''); setNewDescription('');
+      setNewRole(''); setNewTech(''); setNewType(PROJECT_TYPES[0]);
+      await load();
+    }
+    setAdding(false);
+  };
+
+  if (loading) return <Loader2 className="animate-spin text-navy-600 mx-auto" size={28} />;
+
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-navy-400';
+  const labelCls = 'block text-xs font-medium text-slate-500 mb-1';
+
+  return (
+    <div className="space-y-10">
+
+      {/* ── Add new project ── */}
+      <div>
+        <h2 className="font-semibold text-slate-800 mb-1">Add a DESMEN project</h2>
+        <p className="text-sm text-slate-500 mb-4">Projects built under the DESMEN Solutions startup.</p>
+        <form onSubmit={handleAdd} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Title *</label>
+              <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Project Type</label>
+              <select value={newType} onChange={(e) => setNewType(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 bg-white">
+                {PROJECT_TYPES.map((t) => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+            <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={3}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 resize-none" />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Our Role</label>
+              <input type="text" value={newRole} onChange={(e) => setNewRole(e.target.value)}
+                placeholder="e.g. Mechanical Design, Electronics, Software"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800" />
+              <p className="text-xs text-slate-400 mt-1">Comma-separated roles</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Technologies</label>
+              <input type="text" value={newTech} onChange={(e) => setNewTech(e.target.value)}
+                placeholder="e.g. SolidWorks, Arduino, ESP32, Python"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800" />
+              <p className="text-xs text-slate-400 mt-1">Comma-separated tools/tech</p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">Add photos &amp; videos in the project card below after creating.</p>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button type="submit" disabled={adding || !newTitle.trim()}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-navy-700 text-white font-semibold hover:bg-navy-800 disabled:opacity-60">
+            {adding ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
+            Add Project
+          </button>
+        </form>
+      </div>
+
+      {/* ── Existing projects ── */}
+      {items.length > 0 && (
+        <div>
+          <h2 className="font-semibold text-slate-800 mb-1">DESMEN projects</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Click the pencil to edit all fields. Upload photos &amp; videos in each card. Click ★ to set the cover image.
+          </p>
+          <div className="space-y-4">
+            {items.map((item, idx) => (
+              <div key={item.id} className={`bg-white rounded-2xl border p-5 transition-colors ${editingId === item.id ? 'border-navy-400 bg-navy-50/20' : 'border-slate-200'}`}>
+
+                {/* Edit form */}
+                {editingId === item.id ? (
+                  <div className="space-y-4 mb-5">
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelCls}>Title *</label>
+                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputCls} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Project Type</label>
+                        <select value={editType} onChange={(e) => setEditType(e.target.value)} className={inputCls + ' bg-white'}>
+                          {PROJECT_TYPES.map((t) => <option key={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Description</label>
+                      <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} className={inputCls + ' resize-none'} />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelCls}>Our Role (comma-separated)</label>
+                        <input type="text" value={editRole} onChange={(e) => setEditRole(e.target.value)}
+                          placeholder="Mechanical Design, Electronics, Software" className={inputCls} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Technologies (comma-separated)</label>
+                        <input type="text" value={editTech} onChange={(e) => setEditTech(e.target.value)}
+                          placeholder="SolidWorks, Arduino, ESP32, Python" className={inputCls} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleSaveEdit(item.id)} disabled={saving || !editTitle.trim()}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-navy-700 text-white text-sm font-medium hover:bg-navy-800 disabled:opacity-60">
+                        {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Save
+                      </button>
+                      <button onClick={() => setEditingId(null)}
+                        className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Read view */
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <p className="font-semibold text-slate-800 text-sm">{item.title}</p>
+                        {item.project_type && (
+                          <span className="px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 text-xs font-medium">{item.project_type}</span>
+                        )}
+                      </div>
+                      {item.description && <p className="text-xs text-slate-400 line-clamp-1 mb-1">{item.description}</p>}
+                      {item.our_role && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.our_role.split(',').map((r) => r.trim()).filter(Boolean).map((r, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">{r}</span>
+                          ))}
+                        </div>
+                      )}
+                      {item.technologies && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.technologies.split(',').map((t) => t.trim()).filter(Boolean).map((t, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded bg-navy-50 text-navy-700 font-mono text-xs">{t}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => handleMove(idx, -1)} disabled={idx === 0} className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30" aria-label="Move up"><ArrowUp size={14} /></button>
+                      <button onClick={() => handleMove(idx, 1)} disabled={idx === items.length - 1} className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50 disabled:opacity-30" aria-label="Move down"><ArrowDown size={14} /></button>
+                      <button onClick={() => startEdit(item)} className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-navy-50" aria-label="Edit"><Pencil size={14} /></button>
+                      <button onClick={() => handleDelete(item)} className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50" aria-label="Delete"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Media manager — always visible */}
+                <div className="pt-3 border-t border-slate-100">
+                  <p className="text-xs text-slate-400 mb-2">Photos &amp; Videos</p>
+                  <EntityMediaManager entityType="desmen_project" entityId={item.id} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VenturesManager() {
   const [tagline, setTagline] = useState('');
   const [description, setDescription] = useState('');
@@ -1399,11 +1779,106 @@ function LeadershipManager() {
   );
 }
 
+interface ContactMessageRow {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+function MessagesManager() {
+  const [messages, setMessages] = useState<ContactMessageRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('contact_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setMessages((data || []) as ContactMessageRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const markRead = async (id: string, is_read: boolean) => {
+    await supabase.from('contact_messages').update({ is_read }).eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_read } : m));
+  };
+
+  const deleteMsg = async (id: string) => {
+    await supabase.from('contact_messages').delete().eq('id', id);
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const unread = messages.filter((m) => !m.is_read).length;
+
+  if (loading) return <Loader2 className="animate-spin text-navy-600 mx-auto" size={28} />;
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <h2 className="font-semibold text-slate-800">Contact Messages</h2>
+        {unread > 0 && (
+          <span className="px-2 py-0.5 rounded-full bg-navy-700 text-white text-xs font-semibold">{unread} new</span>
+        )}
+      </div>
+
+      {messages.length === 0 ? (
+        <p className="text-slate-400 text-sm">No messages yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`bg-white rounded-2xl border p-5 transition-colors ${!msg.is_read ? 'border-navy-300 bg-navy-50/20' : 'border-slate-200'}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-semibold text-slate-800 text-sm">{msg.name}</p>
+                    {!msg.is_read && (
+                      <span className="w-2 h-2 rounded-full bg-navy-600 shrink-0" />
+                    )}
+                  </div>
+                  <a href={`mailto:${msg.email}`} className="text-xs text-navy-600 hover:underline">{msg.email}</a>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {new Date(msg.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => markRead(msg.id, !msg.is_read)}
+                    className="px-3 py-1 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+                  >
+                    {msg.is_read ? 'Mark unread' : 'Mark read'}
+                  </button>
+                  <button
+                    onClick={() => deleteMsg(msg.id)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminView() {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<
-    'gallery' | 'profile' | 'cv' | 'research' | 'projects' | 'ventures' | 'certifications' | 'leadership'
+    'gallery' | 'profile' | 'cv' | 'research' | 'projects' | 'ventures' | 'certifications' | 'leadership' | 'desmen_projects' | 'messages'
   >('gallery');
 
   useEffect(() => {
@@ -1444,7 +1919,7 @@ export default function AdminView() {
       </div>
 
       <div className="flex gap-2 mb-8 flex-wrap">
-        {(['gallery', 'profile', 'cv', 'research', 'projects', 'certifications', 'leadership', 'ventures'] as const).map(
+        {(['messages', 'gallery', 'profile', 'cv', 'research', 'projects', 'desmen_projects', 'certifications', 'leadership', 'ventures'] as const).map(
           (t) => (
             <button
               key={t}
@@ -1453,11 +1928,13 @@ export default function AdminView() {
                 tab === t ? 'bg-navy-700 text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
+              {t === 'messages' && 'Messages'}
               {t === 'gallery' && 'Gallery'}
               {t === 'profile' && 'Profile Photo'}
               {t === 'cv' && 'CV / Resume'}
               {t === 'research' && 'Research'}
               {t === 'projects' && 'Projects'}
+              {t === 'desmen_projects' && 'DESMEN Projects'}
               {t === 'certifications' && 'Certifications'}
               {t === 'leadership' && 'Leadership'}
               {t === 'ventures' && 'Ventures'}
@@ -1466,11 +1943,13 @@ export default function AdminView() {
         )}
       </div>
 
+      {tab === 'messages' && <MessagesManager />}
       {tab === 'gallery' && <GalleryManager />}
       {tab === 'profile' && <ProfilePhotoManager />}
       {tab === 'cv' && <CVManager />}
       {tab === 'research' && <ResearchMediaManager />}
       {tab === 'projects' && <ProjectsManager />}
+      {tab === 'desmen_projects' && <DesmenProjectsManager />}
       {tab === 'certifications' && <CertificationsManager />}
       {tab === 'leadership' && <LeadershipManager />}
       {tab === 'ventures' && <VenturesManager />}

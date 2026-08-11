@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "portfolio-dev",
-      "runtimeExecutable": "C:\\Users\\USER\\Downloads\\Portfolio\\project\\.claude\\dev-with-path.cmd",
+      "runtimeExecutable": "C:\\Users\\Poojitha\\Documents\\My\\Poojitha\\Portfolio\\Portfolio\\project\\.claude\\dev-with-path.cmd",
       "runtimeArgs": [],
       "port": 5173
     }
