@@ -474,7 +474,10 @@ function ResearchMediaManager() {
 
   const loadResearchList = async () => {
     setLoading(true);
-    const { data } = await supabase.from('researches').select('id, title, period, description, hardware_architecture, software_integration, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+    let { data, error } = await supabase.from('researches').select('id, title, period, description, hardware_architecture, software_integration, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+    if (error) {
+      ({ data } = await supabase.from('researches').select('id, title, period, description, hardware_architecture, software_integration').order('created_at', { ascending: false }));
+    }
     setAllResearch((data || []) as ResearchFull[]);
     setLoading(false);
   };
