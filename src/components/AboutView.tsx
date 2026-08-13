@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Award, MapPin, Loader2, Users, Trophy, Music, BadgeCheck, MapPin as VisitPin, Plane, Camera, Heart } from 'lucide-react';
-import { education, workExperience } from '@/data';
+import { Award, MapPin, Loader2, Users, Trophy, Music, BadgeCheck, MapPin as VisitPin, Plane, Camera, Heart, Rocket, ChevronRight } from 'lucide-react';
+import { education, workExperience, type ViewKey } from '@/data';
 import { supabase } from '@/lib/supabase';
 import MediaLightbox, { type LightboxItem } from '@/components/MediaLightbox';
 
@@ -83,7 +83,11 @@ function GalleryTile({ photo, onClick }: { photo: GalleryMediaItem; onClick: () 
   );
 }
 
-export default function AboutView() {
+interface AboutViewProps {
+  onNavigate: (view: ViewKey) => void;
+}
+
+export default function AboutView({ onNavigate }: AboutViewProps) {
   const [galleryCategories, setGalleryCategories] = useState<GalleryCategory[]>([]);
   const [galleryMedia, setGalleryMedia] = useState<GalleryMediaItem[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
@@ -176,7 +180,7 @@ export default function AboutView() {
           Through university projects, personal builds, and collaborative team work under{' '}
           <button
             className="font-medium text-navy-600 hover:underline"
-            onClick={() => window.history.back()}
+            onClick={() => onNavigate('desmen')}
           >
             DESMEN Solutions
           </button>
@@ -366,6 +370,48 @@ export default function AboutView() {
             })}
           </div>
         )}
+      </section>
+
+      {/* DESMEN — Team & Project Experience */}
+      <section className="mt-16">
+        <h2 className="text-2xl font-semibold text-slate-800 mb-2">Other Experience</h2>
+        <p className="text-slate-500 mb-6">
+          Outside of formal employment and university, I have been involved in team engineering work.
+        </p>
+        <button
+          onClick={() => onNavigate('desmen')}
+          className="w-full group bg-white rounded-2xl border border-slate-200 hover:border-navy-300 hover:shadow-lg transition-all duration-300 overflow-hidden text-left"
+        >
+          <div className="flex items-center gap-5 p-6">
+            <div className="shrink-0 w-14 h-14 rounded-xl bg-navy-700 flex items-center justify-center group-hover:bg-navy-600 transition-colors">
+              <Rocket className="text-white" size={26} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-slate-800 text-lg">DESMEN Solutions</h3>
+                <span className="px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 text-xs font-medium border border-navy-100">
+                  Co-Founder
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-medium">
+                  2023 – Present
+                </span>
+              </div>
+              <p className="mt-1.5 text-slate-500 text-sm leading-relaxed">
+                A student engineering team I started with university friends. We worked on real
+                project requirements across mechanical design, electronics, and software — gaining
+                practical experience in teamwork, project coordination, and engineering delivery.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {['Mechanical Design', 'PCB & Electronics', 'Software', 'Team Leadership', 'Project Coordination'].map((tag) => (
+                  <span key={tag} className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <ChevronRight className="shrink-0 text-slate-300 group-hover:text-navy-400 transition-colors" size={22} />
+          </div>
+        </button>
       </section>
 
       {/* Photo Gallery */}

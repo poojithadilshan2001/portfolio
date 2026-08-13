@@ -31,7 +31,6 @@ export const navItems: { key: ViewKey; label: string }[] = [
   { key: 'about', label: 'About' },
   { key: 'projects', label: 'Projects' },
   { key: 'researches', label: 'Research' },
-  { key: 'desmen', label: 'Experience' },
   { key: 'contact', label: 'Contact' },
 ];
 

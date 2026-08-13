@@ -64,7 +64,7 @@ function App() {
         {view === 'home' && (
           <HomeView onNavigate={handleNavigate} onNavigateToProject={handleNavigateToProject} />
         )}
-        {view === 'about' && <AboutView />}
+        {view === 'about' && <AboutView onNavigate={handleNavigate} />}
         {view === 'projects' && <ProjectsView focusTitle={focusProjectTitle} />}
         {view === 'researches' && <ResearchesView />}
         {view === 'contact' && <ContactView />}
