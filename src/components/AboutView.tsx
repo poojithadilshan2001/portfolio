@@ -157,16 +157,36 @@ export default function AboutView() {
 
   return (
     <div className="animate-fade-in max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-      {/* Header */}
-      <div className="mb-14">
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">Background & Education</h1>
-        <div className="mt-4 flex items-start gap-3">
-          <MapPin className="text-navy-600 mt-1 shrink-0" size={20} />
-          <p className="text-slate-600 text-lg leading-relaxed max-w-3xl">
-            I am based in Badulla, Sri Lanka, with a deep passion for practical product development
-            and manufacturing, taking engineering challenges from theoretical concept to physical
-            prototype.
-          </p>
+      {/* Personal intro */}
+      <div className="mb-14 max-w-3xl">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">About Me</h1>
+        <p className="mt-5 text-lg text-slate-600 leading-relaxed">
+          I am a Mechatronics Engineering graduate from Uva Wellassa University of Sri Lanka,
+          based in Badulla. My core interest is in <strong className="text-slate-800 font-semibold">mechanical design and CAD</strong> —
+          specifically designing parts and assemblies in SolidWorks that can actually be fabricated
+          and assembled in the real world.
+        </p>
+        <p className="mt-4 text-base text-slate-500 leading-relaxed">
+          Alongside CAD, I have practical experience with SolidWorks Simulation for basic FEA,
+          PCB design and electronics through project work, and basic SolidCAM for machining.
+          I also build software — mobile apps and web tools — as a supporting skill that helps
+          me work across multidisciplinary engineering projects.
+        </p>
+        <p className="mt-4 text-base text-slate-500 leading-relaxed">
+          Through university projects, personal builds, and collaborative team work under{' '}
+          <button
+            className="font-medium text-navy-600 hover:underline"
+            onClick={() => window.history.back()}
+          >
+            DESMEN Solutions
+          </button>
+          , I have gained practical experience working on real project requirements, coordinating
+          with teammates, and delivering engineering work from concept to prototype.
+          I am currently looking for an opportunity to begin my professional engineering career.
+        </p>
+        <div className="mt-5 flex items-center gap-2 text-sm text-slate-500">
+          <MapPin size={15} className="text-navy-500 shrink-0" />
+          Badulla, Sri Lanka
         </div>
       </div>
 

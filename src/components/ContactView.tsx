@@ -47,10 +47,15 @@ export default function ContactView() {
   return (
     <div className="animate-fade-in max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
       {/* Header */}
-      <div className="mb-12 text-center">
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">Get In Touch</h1>
-        <p className="mt-3 text-slate-500 max-w-2xl mx-auto">
-          I'm always open to discussing engineering projects, collaborations, or opportunities.
+      <div className="mb-12">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">Let's Connect</h1>
+        <p className="mt-3 text-slate-600 max-w-2xl text-lg leading-relaxed">
+          I am currently looking for an opportunity to begin my engineering career and
+          contribute to a professional team. If you are hiring for a mechanical design,
+          CAD, or engineering role — I would love to hear from you.
+        </p>
+        <p className="mt-2 text-slate-500">
+          Open to graduate engineer roles, internships, and project collaborations.
         </p>
       </div>
 

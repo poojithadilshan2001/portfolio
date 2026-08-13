@@ -79,28 +79,28 @@ const CAPABILITIES = [
 const JOURNEY = [
   {
     year: '2023',
-    title: 'The Beginning',
-    desc: 'DESMEN was started by two university friends with a shared interest in engineering, technology, design and problem solving.',
+    title: 'The Start',
+    desc: 'Two university friends started working on engineering ideas together — turning academic knowledge into something practical.',
   },
   {
     year: '2024',
-    title: 'Building the Team',
-    desc: 'We brought together friends with different technical skills and started working as a small engineering team.',
+    title: 'Building a Team',
+    desc: 'We brought together friends with different technical backgrounds — mechanical, electrical, and software — and started operating as a small multidisciplinary team.',
   },
   {
     year: '2024',
-    title: 'First Projects',
-    desc: 'We started developing projects and solutions for clients while continuing our university studies.',
+    title: 'First Real Projects',
+    desc: 'We took on real project work while studying, learning what it means to deliver engineering solutions against actual requirements — not just assignments.',
   },
   {
     year: '2025',
-    title: 'Growing Through Projects',
-    desc: 'We completed multiple projects across mechanical design, electronics, software and engineering.',
+    title: 'Gaining Experience',
+    desc: 'Multiple projects across mechanical design, electronics, and software gave us practical experience in coordination, problem-solving, and engineering delivery.',
   },
   {
     year: '2026',
-    title: 'DESMEN Solutions Today',
-    desc: 'We continue to build practical engineering solutions and develop new ideas with our growing team.',
+    title: 'Continuing to Learn',
+    desc: 'We continue to work on engineering projects, apply what we have learned, and develop our skills in a team environment.',
   },
 ];
 
@@ -351,16 +351,16 @@ export default function DesmenView({ onNavigate }: DesmenViewProps) {
           </div>
 
           <p className="text-xl sm:text-2xl font-semibold text-slate-200 mb-5 max-w-2xl">
-            Engineering ideas into real-world solutions.
+            Team &amp; project experience from university.
           </p>
 
           <p className="text-slate-400 leading-relaxed max-w-2xl mb-4">
-            DESMEN Solutions is a student-founded engineering startup started while we were studying at university.
-            What began with two friends working on ideas and small projects gradually grew into a team of young
-            engineers working on real projects for clients.
+            While studying, I started working on engineering projects with a group of university friends.
+            What began as a shared interest in building real things grew into a small, multidisciplinary team
+            where we took on actual project work — gaining hands-on experience beyond the classroom.
           </p>
-          <p className="text-navy-300 font-medium mb-10">
-            From idea → design → development → working solution.
+          <p className="text-navy-400 font-medium mb-10">
+            Initiative · Teamwork · Coordination · Practical delivery
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -369,9 +369,9 @@ export default function DesmenView({ onNavigate }: DesmenViewProps) {
                 const el = document.getElementById('desmen-projects');
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-navy-900 font-semibold hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-navy-900 font-semibold hover:bg-slate-100 transition-all shadow-lg"
             >
-              View Our Projects
+              View Team Projects
               <ArrowRight size={16} />
             </button>
             <button
@@ -379,7 +379,7 @@ export default function DesmenView({ onNavigate }: DesmenViewProps) {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-navy-600 text-white font-semibold hover:bg-navy-800 transition-all"
             >
               <Mail size={16} />
-              Work With Us
+              Get in Touch
             </button>
           </div>
         </div>
@@ -737,29 +737,27 @@ export default function DesmenView({ onNavigate }: DesmenViewProps) {
       {/* ══════════════════════════════════════════
           11. CTA
       ══════════════════════════════════════════ */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-slate-50 border-t border-slate-200 py-16 sm:py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-xs font-semibold tracking-widest text-navy-500 uppercase mb-4">Get In Touch</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">Have an Engineering Problem?</h2>
-          <p className="text-xl font-semibold text-navy-700 mb-4">Let's build a solution together.</p>
-          <p className="text-slate-500 leading-relaxed mb-10">
-            Whether you have an idea, a problem that needs solving, or a project that needs engineering support,
-            DESMEN Solutions is ready to work with you.
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-3">Want to Know More?</h2>
+          <p className="text-slate-500 leading-relaxed mb-8">
+            This experience has helped me develop teamwork, communication, project coordination,
+            and practical engineering skills. Feel free to get in touch or view my full project portfolio.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <button
-              onClick={() => onNavigate('contact')}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-navy-700 text-white font-semibold hover:bg-navy-800 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              onClick={() => onNavigate('projects')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-navy-700 text-white font-semibold hover:bg-navy-800 transition-all shadow-md"
             >
-              Start a Project
-              <ArrowRight size={18} />
+              View All Projects
+              <ArrowRight size={16} />
             </button>
             <button
               onClick={() => onNavigate('contact')}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border-2 border-navy-200 text-navy-700 font-semibold hover:bg-navy-50 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-white transition-all"
             >
-              <Mail size={18} />
-              Contact Us
+              <Mail size={16} />
+              Get in Touch
             </button>
           </div>
         </div>

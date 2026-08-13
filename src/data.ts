@@ -9,6 +9,7 @@ import {
   Phone,
   MapPin,
   Linkedin,
+  Github,
   Download,
   ChevronDown,
   CircuitBoard,
@@ -17,39 +18,75 @@ import {
   Wifi,
   Microscope,
   Briefcase,
+  Layers,
+  Zap,
+  BarChart2,
+  Terminal,
 } from 'lucide-react';
 
 export type ViewKey = 'home' | 'about' | 'projects' | 'researches' | 'contact' | 'admin' | 'desmen';
 
 export const navItems: { key: ViewKey; label: string }[] = [
   { key: 'home', label: 'Home' },
-  { key: 'about', label: 'About Me' },
+  { key: 'about', label: 'About' },
   { key: 'projects', label: 'Projects' },
-  { key: 'researches', label: 'Researches' },
-  { key: 'desmen', label: 'DESMEN' },
-  { key: 'contact', label: 'Contact Me' },
+  { key: 'researches', label: 'Research' },
+  { key: 'desmen', label: 'Experience' },
+  { key: 'contact', label: 'Contact' },
 ];
 
 export const highlightCards = [
   {
     icon: Wrench,
     title: 'Mechanical & CAD',
-    description: '3D modeling, fabrication-ready drafting, and hands-on workshop builds.',
+    description: 'SolidWorks part and assembly modeling, technical drawings, and fabrication-ready design.',
+  },
+  {
+    icon: CircuitBoard,
+    title: 'IoT & Embedded Systems',
+    description: 'Custom PCB design, circuit schematic, component selection, and prototype assembly.',
   },
   {
     icon: Factory,
     title: 'Production Management',
-    description: 'Lean manufacturing, quality assurance, and industrial workflow optimization.',
-  },
-  {
-    icon: Cpu,
-    title: 'IoT & Embedded Systems',
-    description: 'Custom PCB design, microcontroller integration, and smart automation.',
+    description: 'Production line management, Lean manufacturing, and quality assurance internship experience.',
   },
   {
     icon: Code2,
     title: 'Software & Programming',
-    description: 'Cross-platform apps and real-time hardware telemetry visualization.',
+    description: 'Mobile apps, web applications, and software tools built as supporting engineering projects.',
+  },
+];
+
+export const skillGroups: {
+  label: string;
+  tier: 'primary' | 'secondary' | 'supporting';
+  skills: string[];
+}[] = [
+  {
+    label: 'Mechanical Design & CAD',
+    tier: 'primary',
+    skills: ['SolidWorks', '3D Part Modeling', 'Assembly Modeling', 'Technical Drawings', 'Mechanical Design', 'Component Design'],
+  },
+  {
+    label: 'Engineering Analysis',
+    tier: 'secondary',
+    skills: ['SolidWorks Simulation', 'FEA — Practical', 'Stress Analysis', 'Displacement Analysis', 'Factor of Safety'],
+  },
+  {
+    label: 'Electronics & PCB',
+    tier: 'secondary',
+    skills: ['PCB Design', 'Schematic Design', 'PCB Layout', 'Circuit Prototyping', 'ESP32 / Arduino'],
+  },
+  {
+    label: 'Manufacturing / CAM',
+    tier: 'supporting',
+    skills: ['SolidCAM — Basic', 'CNC Machining', 'FDM / SLA 3D Printing', 'Steel Welding'],
+  },
+  {
+    label: 'Software & Programming',
+    tier: 'supporting',
+    skills: ['Python', 'Flutter', 'React', 'JavaScript', 'C / C++'],
   },
 ];
 
@@ -153,8 +190,9 @@ export const accordionSections = [
 export const contactInfo = [
   { icon: Mail, label: 'Email', value: 'pujithajayathilaka2001@gmail.com', href: 'mailto:pujithajayathilaka2001@gmail.com' },
   { icon: Phone, label: 'Phone', value: '076 45 41 664', href: 'tel:+94764541664' },
-  { icon: MapPin, label: 'Location', value: 'Badulla, Sri Lanka', href: 'https://maps.app.goo.gl/7h1Dc3bthJVzGoZn7' },
   { icon: Linkedin, label: 'LinkedIn', value: '/in/poojithadilshan2001', href: 'https://www.linkedin.com/in/poojithadilshan2001' },
+  { icon: Github, label: 'GitHub', value: 'github.com/poojithadilshan2001', href: 'https://github.com/poojithadilshan2001' },
+  { icon: MapPin, label: 'Location', value: 'Badulla, Sri Lanka', href: 'https://maps.app.goo.gl/7h1Dc3bthJVzGoZn7' },
 ];
 
 export const icons = {
@@ -163,6 +201,10 @@ export const icons = {
   Gauge,
   Battery,
   Wifi,
+  Layers,
+  Zap,
+  BarChart2,
+  Terminal,
 };
 
 // ---- Database types ----

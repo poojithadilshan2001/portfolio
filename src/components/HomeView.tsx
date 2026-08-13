@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Mail, User, Gamepad2 } from 'lucide-react';
-import { highlightCards, type ViewKey } from '@/data';
+import { ArrowRight, Download, Mail, User, Gamepad2, CheckCircle2 } from 'lucide-react';
+import { highlightCards, skillGroups, type ViewKey } from '@/data';
 import { supabase } from '@/lib/supabase';
 import CarGame from '@/components/CarGame';
 
@@ -13,6 +13,7 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoMediaType, setPhotoMediaType] = useState<string>('image');
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cardImages, setCardImages] = useState<Record<string, { url: string; type: string }>>({});
   const [showGame, setShowGame] = useState(false);
 
@@ -21,10 +22,11 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
       const { data } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['profile_photo_url', 'profile_media_type']);
+        .in('key', ['profile_photo_url', 'profile_media_type', 'cv_url']);
       for (const row of data || []) {
         if (row.key === 'profile_photo_url' && row.value) setPhotoUrl(row.value);
         if (row.key === 'profile_media_type' && row.value) setPhotoMediaType(row.value);
+        if (row.key === 'cv_url' && row.value) setCvUrl(row.value);
       }
     })();
 
@@ -49,63 +51,86 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
   return (
     <div className="animate-fade-in">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-800 to-navy-700">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-400 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800">
+        <div className="absolute inset-0 opacity-[0.06]">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-400 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-slate-400 rounded-full blur-3xl" />
         </div>
-        {/* Eye-catching game button top-right */}
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
-          <button
-            onClick={() => setShowGame(true)}
-            className="group relative inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-400/20 backdrop-blur-sm border-2 border-yellow-400/60 text-yellow-300 font-bold text-sm hover:bg-yellow-400/30 hover:border-yellow-300 transition-all hover:scale-110 shadow-lg shadow-yellow-400/10"
-          >
-            <span className="animate-bounce inline-block">
-              <Gamepad2 size={18} />
-            </span>
-            <span>Play a Game!</span>
-            <span className="absolute -top-2 -right-2 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-yellow-400 items-center justify-center">
-                <span className="text-[8px] text-navy-900 font-black">★</span>
-              </span>
-            </span>
-          </button>
-          <p className="mt-1 text-[10px] text-yellow-200/60 text-center">I built this for you!</p>
-        </div>
+        {/* Subtle game button — tucked in corner */}
+        <button
+          onClick={() => setShowGame(true)}
+          title="Play a quick game I built"
+          className="absolute bottom-4 right-4 z-10 p-2 rounded-lg text-white/20 hover:text-white/50 transition-colors"
+          aria-label="Play a game"
+        >
+          <Gamepad2 size={16} />
+        </button>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
           <div className="flex flex-col-reverse lg:flex-row items-center gap-12">
-            <div className="max-w-3xl">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-blue-100 text-sm font-medium mb-6">
-                Mechatronics Engineer
-              </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight text-balance">
-                Poojitha Dilshan Jayathilaka
+            <div className="max-w-2xl w-full">
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-navy-700/60 border border-navy-600/50 text-blue-200 text-xs font-medium">
+                  <CheckCircle2 size={12} className="text-green-400" />
+                  Open to Opportunities
+                </span>
+                <span className="inline-flex px-3 py-1 rounded-full bg-white/5 border border-white/10 text-blue-200/70 text-xs font-medium">
+                  Mechatronics Engineering Graduate
+                </span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+                Poojitha Dilshan<br />
+                <span className="text-blue-300">Jayathilaka</span>
               </h1>
-              <p className="mt-4 text-lg sm:text-xl text-blue-100 font-medium">
-                Mechatronics Engineering Undergraduate &amp; Product Developer
+
+              <p className="mt-4 text-lg sm:text-xl text-slate-300 font-medium">
+                Mechanical Design &amp; CAD &nbsp;·&nbsp; SolidWorks &nbsp;·&nbsp; Engineering Projects
               </p>
-              <p className="mt-6 text-base sm:text-lg text-blue-200/80 leading-relaxed max-w-2xl">
-                Welcome to my portfolio. I am a Mechatronics Engineer specializing in bridging the gap
-                between mechanical design, physical fabrication, embedded IoT systems, and industrial
-                production management. Explore my site to see my academic research, professional
-                consulting work, and physical engineering builds.
+
+              <p className="mt-5 text-base text-slate-400 leading-relaxed max-w-xl">
+                Engineering graduate with hands-on experience in SolidWorks CAD, FEA simulation,
+                PCB design, and multidisciplinary engineering projects. I enjoy designing things
+                that can actually be built — from 3D models and technical drawings through to
+                physical prototypes.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+
+              <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   onClick={() => onNavigate('projects')}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white text-navy-800 font-semibold hover:bg-blue-50 transition-all hover:scale-105 shadow-lg"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-navy-900 font-semibold text-sm hover:bg-blue-50 transition-all hover:shadow-lg hover:shadow-white/10"
                 >
                   View My Projects
-                  <ArrowRight size={18} />
+                  <ArrowRight size={16} />
                 </button>
+                {cvUrl && (
+                  <a
+                    href={cvUrl}
+                    download="Poojitha_Dilshan_CV.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-navy-700 border border-navy-600 text-white font-semibold text-sm hover:bg-navy-600 transition-all"
+                  >
+                    <Download size={16} />
+                    Download CV
+                  </a>
+                )}
                 <button
                   onClick={() => onNavigate('contact')}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all hover:scale-105"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-semibold text-sm hover:bg-white/10 transition-all"
                 >
-                  <Mail size={18} />
-                  Contact Me
+                  <Mail size={16} />
+                  Contact
                 </button>
+              </div>
+
+              {/* Key skills quick-view */}
+              <div className="mt-10 flex flex-wrap gap-2">
+                {['SolidWorks', 'Mechanical Design', 'FEA / Simulation', 'PCB Design', 'SolidCAM — Basic', 'Python', 'Flutter'].map((s) => (
+                  <span key={s} className="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-slate-400 text-xs font-mono">
+                    {s}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -114,47 +139,80 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
               className="shrink-0 group"
               aria-label="Go to About Me"
             >
-              <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm border-4 border-white/20 shadow-2xl group-hover:border-white/40 transition-all group-hover:scale-105">
+              <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl overflow-hidden bg-navy-800 border border-navy-700 shadow-2xl group-hover:border-navy-500 transition-all duration-300 group-hover:scale-[1.03]">
                 {!photoUrl || photoFailed ? (
-                  <div className="w-full h-full flex items-center justify-center text-blue-200/50">
-                    <User size={72} strokeWidth={1.5} />
+                  <div className="w-full h-full flex items-center justify-center text-navy-600">
+                    <User size={64} strokeWidth={1.5} />
                   </div>
                 ) : photoMediaType === 'video' ? (
-                  <video
-                    src={photoUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                    onError={() => setPhotoFailed(true)}
-                  />
+                  <video src={photoUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" onError={() => setPhotoFailed(true)} />
                 ) : (
-                  <img
-                    src={photoUrl}
-                    alt="Poojitha Dilshan Jayathilaka"
-                    onError={() => setPhotoFailed(true)}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={photoUrl} alt="Poojitha Dilshan Jayathilaka" onError={() => setPhotoFailed(true)} className="w-full h-full object-cover" />
                 )}
               </div>
+              <p className="mt-2 text-center text-xs text-slate-500 group-hover:text-slate-400 transition-colors">About Me →</p>
             </button>
           </div>
         </div>
       </section>
 
-      {/* Highlight Grid */}
+      {/* Skills — primary hierarchy */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+          <div className="mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Skills &amp; Technical Capabilities</h2>
+            <p className="mt-2 text-slate-500 max-w-2xl">
+              Built through university coursework, personal projects, and hands-on team engineering work.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {skillGroups.map((group) => (
+              <div
+                key={group.label}
+                className={`rounded-xl border p-5 ${
+                  group.tier === 'primary'
+                    ? 'border-navy-300 bg-navy-50 col-span-1 sm:col-span-2 lg:col-span-1 xl:col-span-1'
+                    : group.tier === 'secondary'
+                    ? 'border-slate-200 bg-slate-50'
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded ${
+                    group.tier === 'primary' ? 'bg-navy-700 text-white' :
+                    group.tier === 'secondary' ? 'bg-slate-200 text-slate-600' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
+                    {group.tier === 'primary' ? 'Primary' : group.tier === 'secondary' ? 'Secondary' : 'Supporting'}
+                  </span>
+                </div>
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">{group.label}</h3>
+                <ul className="space-y-1.5">
+                  {group.skills.map((skill) => (
+                    <li key={skill} className="flex items-center gap-2 text-sm text-slate-600">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        group.tier === 'primary' ? 'bg-navy-600' :
+                        group.tier === 'secondary' ? 'bg-slate-400' : 'bg-slate-300'
+                      }`} />
+                      {skill}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Project Areas */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-800">
-            Areas of Expertise
-          </h2>
-          <p className="mt-3 text-slate-500 max-w-2xl mx-auto">
-            A multidisciplinary skill set spanning mechanical design, manufacturing, embedded
-            electronics, and software.
+        <div className="mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Project Areas</h2>
+          <p className="mt-2 text-slate-500">
+            Explore my work across engineering disciplines.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {highlightCards.map((card, i) => {
             const Icon = card.icon;
             const image = cardImages[card.title];
@@ -162,42 +220,34 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
               <button
                 key={card.title}
                 onClick={() => onNavigateToProject(card.title)}
-                className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:border-navy-300 transition-all duration-300 animate-fade-up text-left"
-                style={{ animationDelay: `${i * 100}ms` }}
+                className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-navy-200 transition-all duration-300 animate-fade-up text-left"
+                style={{ animationDelay: `${i * 80}ms` }}
               >
-                <div className="aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
+                <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden">
                   {image ? (
                     <>
                       {image.type === 'video' ? (
-                        <video
-                          src={image.url}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                        />
+                        <video src={image.url} autoPlay loop muted playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <img
-                          src={image.url}
-                          alt={card.title}
-                          className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                        />
+                        <img src={image.url} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy-900/30 to-transparent" />
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                      <Icon size={40} />
+                    <div className="w-full h-full flex items-center justify-center text-slate-200">
+                      <Icon size={36} />
                     </div>
                   )}
                 </div>
-                <div className="p-6">
-                  <div className="w-11 h-11 rounded-xl bg-navy-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Icon className="text-white" size={22} />
+                <div className="p-5">
+                  <div className="w-9 h-9 rounded-lg bg-navy-700 flex items-center justify-center mb-3 group-hover:bg-navy-600 transition-colors">
+                    <Icon className="text-white" size={18} />
                   </div>
-                  <h3 className="font-semibold text-slate-800 text-lg">{card.title}</h3>
-                  <p className="mt-2 text-sm text-slate-500 leading-relaxed">{card.description}</p>
+                  <h3 className="font-semibold text-slate-800">{card.title}</h3>
+                  <p className="mt-1 text-sm text-slate-500 leading-relaxed">{card.description}</p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-navy-600">
+                    View projects <ArrowRight size={12} />
+                  </span>
                 </div>
               </button>
             );
