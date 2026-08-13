@@ -16,7 +16,7 @@ export default function Footer({ onNavigate }: FooterProps) {
               </div>
               <div>
                 <p className="text-white font-semibold">Poojitha Dilshan Jayathilaka</p>
-                <p className="text-sm text-slate-500">Mechanical Design &amp; CAD · Engineering Graduate</p>
+                <p className="text-sm text-slate-500">Mechatronics Engineer · CAD &amp; Design</p>
               </div>
             </div>
             <p className="text-xs text-slate-600 max-w-xs mt-2">

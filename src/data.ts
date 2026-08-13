@@ -80,7 +80,7 @@ export const skillGroups: {
   {
     label: 'Manufacturing / CAM',
     tier: 'supporting',
-    skills: ['SolidCAM — Basic', 'CNC Machining', 'FDM / SLA 3D Printing', 'Steel Welding'],
+    skills: ['SolidCAM — Basic', 'Ladder PLC — Basic', 'CNC Machining', 'FDM / SLA 3D Printing', 'Steel Welding'],
   },
   {
     label: 'Software & Programming',
