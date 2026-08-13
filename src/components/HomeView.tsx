@@ -83,7 +83,7 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
                 Poojitha Dilshan Jayathilaka
               </h1>
               <p className="mt-4 text-lg sm:text-xl text-blue-100 font-medium">
-                Multidisciplinary Mechatronics Engineer
+                Mechatronics Engineering Undergraduate &amp; Product Developer
               </p>
               <p className="mt-6 text-base sm:text-lg text-blue-200/80 leading-relaxed max-w-2xl">
                 Welcome to my portfolio. I am a Mechatronics Engineer specializing in bridging the gap

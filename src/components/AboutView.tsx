@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Award, MapPin, Loader2, Users, Trophy, Music, BadgeCheck, MapPin as VisitPin } from 'lucide-react';
+import { Award, MapPin, Loader2, Users, Trophy, Music, BadgeCheck, MapPin as VisitPin, Plane, Camera, Heart } from 'lucide-react';
 import { education, workExperience } from '@/data';
 import { supabase } from '@/lib/supabase';
 import MediaLightbox, { type LightboxItem } from '@/components/MediaLightbox';
@@ -49,6 +49,9 @@ const CATEGORY_ICONS: Record<string, typeof Users> = {
   Sports: Trophy,
   Music: Music,
   Visits: VisitPin,
+  Travel: Plane,
+  Hobbies: Heart,
+  Photography: Camera,
 };
 
 function GalleryTile({ photo, onClick }: { photo: GalleryMediaItem; onClick: () => void }) {

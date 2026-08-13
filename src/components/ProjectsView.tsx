@@ -1,8 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Loader2, FolderOpen } from 'lucide-react';
+import { ChevronDown, Loader2, FolderOpen, Rocket } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { iconMap, type ProjectRow, type SubprojectRow } from '@/data';
 import MediaLightbox, { type LightboxItem } from '@/components/MediaLightbox';
+
+interface DesmenProjectItem {
+  id: string;
+  title: string;
+  description: string | null;
+  our_role: string | null;
+  technologies: string | null;
+  project_type: string | null;
+  portfolio_project_id: string | null;
+  sort_order: number;
+  cover: { url: string; type: string } | null;
+}
 
 interface EntityMediaRow {
   entity_type: string;
@@ -25,6 +37,9 @@ export default function ProjectsView({ focusTitle }: ProjectsViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [desmenOpen, setDesmenOpen] = useState(false);
+  const [desmenProjects, setDesmenProjects] = useState<DesmenProjectItem[]>([]);
+  const [linkedDesmenMap, setLinkedDesmenMap] = useState<Record<string, DesmenProjectItem[]>>({});
   const [lightbox, setLightbox] = useState<{ items: LightboxItem[]; title?: string } | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -72,6 +87,33 @@ export default function ProjectsView({ focusTitle }: ProjectsViewProps) {
         groupedMedia[m.entity_id].push(m);
       }
       setMedia(groupedMedia);
+
+      // DESMEN projects
+      const { data: desmenData } = await supabase
+        .from('desmen_projects')
+        .select('id, title, description, our_role, technologies, project_type, portfolio_project_id, sort_order')
+        .order('sort_order', { ascending: true });
+      const { data: desmenMedia } = await supabase
+        .from('entity_media')
+        .select('entity_id, media_url, media_type, is_cover, sort_order')
+        .eq('entity_type', 'desmen_project')
+        .order('sort_order', { ascending: true });
+      const desmenWithCovers = ((desmenData || []) as Omit<DesmenProjectItem, 'cover'>[]).map((p) => {
+        const items = (desmenMedia || []).filter((m) => m.entity_id === p.id);
+        const cover = items.find((m) => m.is_cover) || items[0] || null;
+        return { ...p, cover: cover ? { url: cover.media_url, type: cover.media_type } : null };
+      });
+      setDesmenProjects(desmenWithCovers);
+
+      // Build map: portfolio_project_id → desmen projects
+      const map: Record<string, DesmenProjectItem[]> = {};
+      for (const p of desmenWithCovers) {
+        if (p.portfolio_project_id) {
+          if (!map[p.portfolio_project_id]) map[p.portfolio_project_id] = [];
+          map[p.portfolio_project_id].push(p);
+        }
+      }
+      setLinkedDesmenMap(map);
 
       setLoading(false);
     })();
@@ -132,6 +174,85 @@ export default function ProjectsView({ focusTitle }: ProjectsViewProps) {
       </div>
 
       <div className="space-y-4">
+        {/* DESMEN Projects Section */}
+        {desmenProjects.length > 0 && (
+          <div className="bg-white rounded-2xl border border-navy-200 overflow-hidden hover:border-navy-400 transition-colors animate-fade-up">
+            <button
+              onClick={() => setDesmenOpen(!desmenOpen)}
+              className="w-full flex items-center gap-4 p-5 sm:p-6 text-left"
+            >
+              <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${desmenOpen ? 'bg-navy-700' : 'bg-navy-50'}`}>
+                <Rocket className={desmenOpen ? 'text-white' : 'text-navy-600'} size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-slate-800">DESMEN Solutions Projects</h3>
+                <p className="text-xs text-navy-500 font-medium mt-0.5">My engineering startup</p>
+              </div>
+              <ChevronDown className={`text-slate-400 transition-transform duration-300 ${desmenOpen ? 'rotate-180' : ''}`} size={22} />
+            </button>
+
+            {desmenOpen && (
+              <div className="px-5 sm:px-6 pb-6 animate-fade-in">
+                <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                  Projects built under <span className="font-semibold text-navy-700">DESMEN Solutions</span> — my student engineering startup.
+                  We work on mechanical design, electronics, embedded systems and software for real clients.
+                </p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {desmenProjects.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        if (p.cover) {
+                          setLightbox({
+                            items: [{ url: p.cover.url, type: p.cover.type }],
+                            title: p.title,
+                          });
+                        }
+                      }}
+                      disabled={!p.cover}
+                      className="group rounded-xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-navy-200 transition-all text-left"
+                    >
+                      <div className="aspect-[16/10] bg-navy-50 overflow-hidden relative">
+                        {p.cover ? (
+                          p.cover.type === 'video' ? (
+                            <video src={p.cover.url} autoPlay loop muted playsInline
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <img src={p.cover.url} alt={p.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          )
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-navy-200">
+                            <Rocket size={32} />
+                          </div>
+                        )}
+                        {p.project_type && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-navy-900/80 text-navy-300 text-[10px] font-semibold">
+                            {p.project_type}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h5 className="font-semibold text-slate-800 text-sm">{p.title}</h5>
+                        {p.description && (
+                          <p className="mt-1.5 text-xs text-slate-500 leading-relaxed line-clamp-2">{p.description}</p>
+                        )}
+                        {p.technologies && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {p.technologies.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 3).map((t, ti) => (
+                              <span key={ti} className="px-1.5 py-0.5 rounded bg-navy-50 text-navy-600 font-mono text-[10px]">{t}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {projects.map((section, i) => {
           const Icon = (section.icon_name && iconMap[section.icon_name]) || iconMap.Code2;
           const isOpen = openId === section.id;
@@ -255,6 +376,57 @@ export default function ProjectsView({ focusTitle }: ProjectsViewProps) {
                       )}
                     </div>
                   </div>
+
+                  {/* DESMEN projects linked to this category */}
+                  {(linkedDesmenMap[section.id] || []).length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-slate-100">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Rocket className="text-navy-600" size={20} />
+                        <h4 className="text-base font-semibold text-slate-800">Under DESMEN Solutions</h4>
+                        <span className="text-xs text-slate-400">({linkedDesmenMap[section.id].length})</span>
+                      </div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {linkedDesmenMap[section.id].map((dp) => (
+                          <button
+                            key={dp.id}
+                            onClick={() => {
+                              if (dp.cover) setLightbox({ items: [{ url: dp.cover.url, type: dp.cover.type }], title: dp.title });
+                            }}
+                            disabled={!dp.cover}
+                            className="group rounded-xl border border-navy-100 bg-navy-50/30 overflow-hidden hover:shadow-md hover:border-navy-300 transition-all text-left"
+                          >
+                            <div className="aspect-[16/10] bg-navy-100 overflow-hidden relative">
+                              {dp.cover ? (
+                                dp.cover.type === 'video' ? (
+                                  <video src={dp.cover.url} autoPlay loop muted playsInline
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                ) : (
+                                  <img src={dp.cover.url} alt={dp.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                )
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-navy-300">
+                                  <Rocket size={28} />
+                                </div>
+                              )}
+                              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-navy-900/80 text-navy-300 text-[10px] font-semibold">DESMEN</span>
+                            </div>
+                            <div className="p-4">
+                              <h5 className="font-semibold text-slate-800 text-sm">{dp.title}</h5>
+                              {dp.description && <p className="mt-1 text-xs text-slate-500 line-clamp-2">{dp.description}</p>}
+                              {dp.technologies && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {dp.technologies.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 3).map((t, ti) => (
+                                    <span key={ti} className="px-1.5 py-0.5 rounded bg-navy-100 text-navy-700 font-mono text-[10px]">{t}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Sub-projects */}
                   {subs.length > 0 && (

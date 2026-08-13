@@ -454,7 +454,6 @@ interface ResearchFull {
 
 function ResearchMediaManager() {
   const [allResearch, setAllResearch] = useState<ResearchFull[]>([]);
-  const [selectedId, setSelectedId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -473,13 +472,10 @@ function ResearchMediaManager() {
   const [newSoftware, setNewSoftware] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const loadResearchList = async (keepSelected?: string) => {
+  const loadResearchList = async () => {
     setLoading(true);
     const { data } = await supabase.from('researches').select('id, title, period, description, hardware_architecture, software_integration, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
-    const rows = (data || []) as ResearchFull[];
-    setAllResearch(rows);
-    const nextSelected = keepSelected && rows.find((r) => r.id === keepSelected) ? keepSelected : rows[0]?.id || '';
-    setSelectedId(nextSelected);
+    setAllResearch((data || []) as ResearchFull[]);
     setLoading(false);
   };
 
@@ -490,7 +486,7 @@ function ResearchMediaManager() {
     const b = allResearch[target];
     await supabase.from('researches').update({ sort_order: b.sort_order }).eq('id', a.id);
     await supabase.from('researches').update({ sort_order: a.sort_order }).eq('id', b.id);
-    await loadResearchList(selectedId);
+    await loadResearchList();
   };
 
   useEffect(() => {
@@ -518,7 +514,7 @@ function ResearchMediaManager() {
     }).eq('id', id);
     setEditingId(null);
     setSaving(false);
-    await loadResearchList(id);
+    await loadResearchList();
   };
 
   const handleDeleteResearch = async (r: ResearchFull) => {
@@ -559,7 +555,7 @@ function ResearchMediaManager() {
       setNewDescription('');
       setNewHardware('');
       setNewSoftware('');
-      await loadResearchList(data?.id);
+      await loadResearchList();
     }
     setCreating(false);
   };
@@ -640,8 +636,7 @@ function ResearchMediaManager() {
               {allResearch.map((r, idx) => (
                 <div
                   key={r.id}
-                  className={`bg-white rounded-2xl border p-4 transition-colors ${editingId === r.id ? 'border-navy-400 bg-navy-50/30' : selectedId === r.id ? 'border-navy-300 bg-navy-50/20' : 'border-slate-200 hover:border-navy-200 cursor-pointer'}`}
-                  onClick={() => { if (editingId !== r.id) setSelectedId(r.id); }}
+                  className={`bg-white rounded-2xl border p-4 transition-colors ${editingId === r.id ? 'border-navy-400 bg-navy-50/30' : 'border-slate-200'}`}
                 >
                   {editingId === r.id ? (
                     <div onClick={(e) => e.stopPropagation()} className="space-y-3">
@@ -714,12 +709,10 @@ function ResearchMediaManager() {
                           <Trash2 size={14} />
                         </button>
                       </div>
-                      {selectedId === r.id && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <p className="text-xs text-slate-500 mb-2">Media for this research:</p>
-                          <EntityMediaManager entityType="research" entityId={r.id} />
-                        </div>
-                      )}
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-xs text-slate-400 mb-2">Photos &amp; Videos</p>
+                        <EntityMediaManager entityType="research" entityId={r.id} />
+                      </div>
                     </>
                   )}
                 </div>
@@ -1143,11 +1136,13 @@ interface DesmenProjectRow {
   our_role: string | null;
   technologies: string | null;
   project_type: string | null;
+  portfolio_project_id: string | null;
   sort_order: number;
 }
 
 function DesmenProjectsManager() {
   const [items, setItems] = useState<DesmenProjectRow[]>([]);
+  const [portfolioCategories, setPortfolioCategories] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -1159,6 +1154,7 @@ function DesmenProjectsManager() {
   const [editRole, setEditRole] = useState('');
   const [editTech, setEditTech] = useState('');
   const [editType, setEditType] = useState(PROJECT_TYPES[0]);
+  const [editPortfolioCat, setEditPortfolioCat] = useState('');
 
   // New project fields
   const [newTitle, setNewTitle] = useState('');
@@ -1166,15 +1162,17 @@ function DesmenProjectsManager() {
   const [newRole, setNewRole] = useState('');
   const [newTech, setNewTech] = useState('');
   const [newType, setNewType] = useState(PROJECT_TYPES[0]);
+  const [newPortfolioCat, setNewPortfolioCat] = useState('');
   const [adding, setAdding] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('desmen_projects')
-      .select('id, title, description, our_role, technologies, project_type, sort_order')
-      .order('sort_order', { ascending: true });
+    const [{ data }, { data: catData }] = await Promise.all([
+      supabase.from('desmen_projects').select('id, title, description, our_role, technologies, project_type, portfolio_project_id, sort_order').order('sort_order', { ascending: true }),
+      supabase.from('projects').select('id, title').order('sort_order', { ascending: true }),
+    ]);
     setItems((data || []) as DesmenProjectRow[]);
+    setPortfolioCategories((catData || []) as { id: string; title: string }[]);
     setLoading(false);
   };
 
@@ -1196,6 +1194,7 @@ function DesmenProjectsManager() {
     setEditRole(item.our_role || '');
     setEditTech(item.technologies || '');
     setEditType(item.project_type || PROJECT_TYPES[0]);
+    setEditPortfolioCat(item.portfolio_project_id || '');
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -1206,6 +1205,7 @@ function DesmenProjectsManager() {
       our_role: editRole.trim() || null,
       technologies: editTech.trim() || null,
       project_type: editType,
+      portfolio_project_id: editPortfolioCat || null,
     }).eq('id', id);
     setEditingId(null);
     setSaving(false);
@@ -1231,12 +1231,13 @@ function DesmenProjectsManager() {
       our_role: newRole.trim() || null,
       technologies: newTech.trim() || null,
       project_type: newType,
+      portfolio_project_id: newPortfolioCat || null,
       sort_order: items.length,
     });
     if (insertError) { setError(insertError.message); }
     else {
       setNewTitle(''); setNewDescription('');
-      setNewRole(''); setNewTech(''); setNewType(PROJECT_TYPES[0]);
+      setNewRole(''); setNewTech(''); setNewType(PROJECT_TYPES[0]); setNewPortfolioCat('');
       await load();
     }
     setAdding(false);
@@ -1290,6 +1291,15 @@ function DesmenProjectsManager() {
               <p className="text-xs text-slate-400 mt-1">Comma-separated tools/tech</p>
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Also show in Projects page under</label>
+            <select value={newPortfolioCat} onChange={(e) => setNewPortfolioCat(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 bg-white">
+              <option value="">— Don't link to Projects page —</option>
+              {portfolioCategories.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+            <p className="text-xs text-slate-400 mt-1">If selected, this project appears under that category in the Projects page too.</p>
+          </div>
           <p className="text-xs text-slate-400">Add photos &amp; videos in the project card below after creating.</p>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" disabled={adding || !newTitle.trim()}
@@ -1341,6 +1351,13 @@ function DesmenProjectsManager() {
                         <input type="text" value={editTech} onChange={(e) => setEditTech(e.target.value)}
                           placeholder="SolidWorks, Arduino, ESP32, Python" className={inputCls} />
                       </div>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Also show in Projects page under</label>
+                      <select value={editPortfolioCat} onChange={(e) => setEditPortfolioCat(e.target.value)} className={inputCls + ' bg-white'}>
+                        <option value="">— Don't link to Projects page —</option>
+                        {portfolioCategories.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                      </select>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleSaveEdit(item.id)} disabled={saving || !editTitle.trim()}
@@ -1878,8 +1895,8 @@ export default function AdminView() {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<
-    'gallery' | 'profile' | 'cv' | 'research' | 'projects' | 'ventures' | 'certifications' | 'leadership' | 'desmen_projects' | 'messages'
-  >('gallery');
+    'gallery' | 'profile' | 'cv' | 'research' | 'projects' | 'certifications' | 'leadership' | 'desmen_projects' | 'messages'
+  >('messages');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -1919,7 +1936,7 @@ export default function AdminView() {
       </div>
 
       <div className="flex gap-2 mb-8 flex-wrap">
-        {(['messages', 'gallery', 'profile', 'cv', 'research', 'projects', 'desmen_projects', 'certifications', 'leadership', 'ventures'] as const).map(
+        {(['messages', 'gallery', 'profile', 'cv', 'research', 'projects', 'desmen_projects', 'certifications', 'leadership'] as const).map(
           (t) => (
             <button
               key={t}
@@ -1937,7 +1954,6 @@ export default function AdminView() {
               {t === 'desmen_projects' && 'DESMEN Projects'}
               {t === 'certifications' && 'Certifications'}
               {t === 'leadership' && 'Leadership'}
-              {t === 'ventures' && 'Ventures'}
             </button>
           )
         )}
@@ -1952,7 +1968,6 @@ export default function AdminView() {
       {tab === 'desmen_projects' && <DesmenProjectsManager />}
       {tab === 'certifications' && <CertificationsManager />}
       {tab === 'leadership' && <LeadershipManager />}
-      {tab === 'ventures' && <VenturesManager />}
     </div>
   );
 }
