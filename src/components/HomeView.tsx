@@ -75,7 +75,7 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
                   Open to Opportunities
                 </span>
                 <span className="inline-flex px-3 py-1 rounded-full bg-white/5 border border-white/10 text-blue-200/70 text-xs font-medium">
-                  Mechatronics Engineering Graduate
+                  Uva Wellassa University · Sri Lanka
                 </span>
               </div>
 
@@ -85,14 +85,14 @@ export default function HomeView({ onNavigate, onNavigateToProject }: HomeViewPr
               </h1>
 
               <p className="mt-4 text-lg sm:text-xl text-slate-300 font-medium">
-                Mechanical Design &amp; CAD &nbsp;·&nbsp; SolidWorks &nbsp;·&nbsp; Engineering Projects
+                Mechatronics Engineering Graduate
               </p>
 
               <p className="mt-5 text-base text-slate-400 leading-relaxed max-w-xl">
-                Engineering graduate with hands-on experience in SolidWorks CAD, FEA simulation,
-                PCB design, and multidisciplinary engineering projects. I enjoy designing things
-                that can actually be built — from 3D models and technical drawings through to
-                physical prototypes.
+                I work across mechanical design, electronics, and software — building things
+                that actually function in the real world. My strongest area is CAD and mechanical
+                design (SolidWorks), and I also have hands-on experience with PCB design,
+                FEA simulation, and building software applications.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
